@@ -10,6 +10,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.feature_selection import RFE
 import sys
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
 
 # Load the diabetes dataset
 #alldata = np.loadtxt("train.csv",delimiter=",", usecols=range(0,2))
@@ -94,54 +95,28 @@ y = Y
 
 
 
-print("standard scaler")
-scaler = preprocessing.StandardScaler().fit(X)
-X = scaler.transform(X)
-predictX = scaler.transform(predictX)
+#print("standard scaler")
+#scaler = preprocessing.StandardScaler().fit(X)
+#X = scaler.transform(X)
+#predictX = scaler.transform(predictX)
 
 (XROW,XCOL) = X.shape
 
-#no of features
-nof_list=np.arange(1,XCOL)
-high_score=0
-#Variable to store the optimum features
-nof=0
-score_list =[]
-choosemodel = None
-cols = None
-print("x.shape:",X.shape)
-print("nof_list:",len(nof_list))
-for n in range(len(nof_list)):
-    print("RFE:", n)
-    X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.2, random_state = 0)
-    model = linear_model.LinearRegression()
-    rfe = RFE(model,nof_list[n])
-    X_train_rfe = rfe.fit_transform(X_train,y_train)
-    X_test_rfe = rfe.transform(X_test)
-    model.fit(X_train_rfe,y_train)
-    score = model.score(X_test_rfe,y_test)
-    score_list.append(score)
-    if(score>high_score):
-        high_score = score
-        nof = nof_list[n]
-        choosemodel = model
-        cols = rfe.support_
-print("Optimum number of features: %d" %nof)
-print("Score with %d features: %f" % (nof, high_score))
 
 
+#train_features, test_features, train_labels, test_labels = train_test_split(X, y, test_size = 0.2, random_state = 42)
+train_features = X
+train_labels = y
 
-#model = linear_model.LinearRegression()
-##Initializing RFE model
-#rfe = RFE(model, 7)
-##Transforming data using RFE
-#X_rfe = rfe.fit_transform(X,y)
-##Fitting the data to model
-#model.fit(X_rfe,y)
-#cols = rfe.support_
-#
-predictX = predictX[:, cols]
-predictRes = choosemodel.predict(predictX)
+print('Training Features Shape:', train_features.shape)
+print('Training Labels Shape:', train_labels.shape)
+
+# Instantiate model with 1000 decision trees
+rf = RandomForestRegressor(n_estimators = 1000, random_state = 42)
+# Train the model on training data
+rf.fit(train_features, train_labels);
+
+predictRes = rf.predict(predictX)
 
 #sys.exit(9)
 ## Plot outputs
