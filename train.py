@@ -14,16 +14,16 @@ from sklearn.ensemble import RandomForestRegressor
 
 # Load the diabetes dataset
 #alldata = np.loadtxt("train.csv",delimiter=",", usecols=range(0,2))
-#alldata = pd.read_csv("train.csv").to_numpy()
-#predictdata = pd.read_csv("predict.csv").to_numpy()
-alldata = pd.read_csv("train.csv")
-predictdata = pd.read_csv("predict.csv")
+alldata = pd.read_csv("train.csv").to_numpy()
+predictdata = pd.read_csv("predict.csv").to_numpy()
+#alldata = pd.read_csv("train.csv")
+#predictdata = pd.read_csv("predict.csv")
 
 
 
-imp = SimpleImputer(strategy='most_frequent')
-alldata = imp.fit_transform(alldata)
-predictdata = imp.fit_transform(predictdata)
+#imp = SimpleImputer(strategy='most_frequent')
+#alldata = imp.fit_transform(alldata)
+#predictdata = imp.fit_transform(predictdata)
 (ROW,COL) = alldata.shape
 (PROW,PCOL) = predictdata.shape
 
@@ -47,28 +47,38 @@ predictX = predictdata[:,1:11]
 newX = np.zeros((ROW,0))
 newPX = np.zeros((PROW,0))
 strlist = []
+
+
 for i in range(0,10):
-    print(i, type(X[:,i][0]))
-    print(i,X[:5,i])
     if type(X[:,i][0]) == str:
         strlist.append(i)
     else:
-        newX = np.append(newX, X[:, i:i+1], axis=1)
-        newPX = np.append(newPX, predictX[:, i:i+1], axis = 1)
+        imp = SimpleImputer(strategy='median')
+        newX = np.append(newX, imp.fit_transform(X[:, i:i+1]), axis=1)
+        newPX = np.append(newPX, imp.fit_transform(predictX[:, i:i+1]), axis = 1)
 
-print(strlist)
+
+
+scaler = preprocessing.StandardScaler().fit(newX)
+newX = scaler.transform(newX)
+newPX = scaler.transform(newPX)
+newX = preprocessing.normalize(newX, norm='l2')
+newPX = preprocessing.normalize(newPX, norm='l2')
+
+
 
 labeldata = X[:,strlist]
 labeldata = np.append(labeldata, predictX[:,strlist],axis=0)
 
 
-print(labeldata.shape)
-print(labeldata[:2,:])
 
 print("one hot encoder")
 for i in range(0,len(strlist)):
-    feaLen = len(np.unique(labeldata[:,i:i+1]))
+    #print(labeldata[:,i:i+1])
     ldata = labeldata[:,i:i+1]
+    imp = SimpleImputer(strategy='most_frequent')
+    ldata = imp.fit_transform(ldata)
+    feaLen = len(np.unique(ldata))
     if feaLen < 10:
         drop_enc = preprocessing.OneHotEncoder(drop='first',categories='auto').fit(ldata)
         newdata = drop_enc.transform(ldata).toarray()
@@ -82,10 +92,6 @@ for i in range(0,len(strlist)):
 
 
 
-#drop_enc = preprocessing.OneHotEncoder(drop='first',categories='auto').fit(labeldata)
-#newdata = drop_enc.transform(labeldata).toarray()
-#newX = np.append(newX, newdata[:ROW, :], axis=1)
-#newPX = np.append(newPX, newdata[ROW:,:], axis = 1)
 
 X = newX
 predictX = newPX
